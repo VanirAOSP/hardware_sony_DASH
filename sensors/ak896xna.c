@@ -225,7 +225,7 @@ static struct sensor_desc ak896xna_magnetic = {
 		maxRange: AKM_CHIP_MAXRANGE,
 		resolution: AKM_CHIP_RESOLUTION,
 		power: AKM_CHIP_POWER,
-		minDelay: 5000,
+		minDelay: 10000,
 	},
 	.api = {
 		init: ak896x_init,
