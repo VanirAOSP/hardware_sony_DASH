@@ -6,7 +6,6 @@
 
 #include <linux/input.h>
 #include <errno.h>
-#include <unistd.h>
 #include "sensors_log.h"
 #include "sensors_list.h"
 #include "sensors_fifo.h"
@@ -38,17 +37,18 @@ static void *light_poll(void *arg)
     sensors_event_t data;
     char buf[20];
     int lux;
-    int i;
 
     memset(&data, 0, sizeof(data));
+
     pread(d->fd, buf, sizeof(buf), 0);
+
+    /*convert to lux value*/
     lux = atof(buf)*12;
 
     /*ignore null or negative values*/
     if (lux <= 0)
         lux = 1;
 
-    ALOGV("light_poll : %d lux", lux);
     data.light = lux;
     data.version = light_sensor.sensor.version;
     data.sensor = light_sensor.sensor.handle;
@@ -63,7 +63,6 @@ static int light_init(struct sensor_api_t *s)
 {
     struct sensor_desc *d = container_of(s, struct sensor_desc, api);
 
-    //ALOGV("light_init");
     sensors_worker_init(&d->worker, light_poll, &d->worker);
     sensors_sysfs_init(&d->sysfs, AS3677_DEV, SYSFS_TYPE_ABS_PATH);
 
@@ -78,9 +77,7 @@ static int light_activate(struct sensor_api_t *s, int enable)
     int count;
     struct sensor_desc *d = container_of(s, struct sensor_desc, api);
 
-    if (enable)
-    {
-        //ALOGV("light_activate : enable");
+    if (enable) {
         d->sysfs.write_int(&d->sysfs, "als_on", 1);
 
         count = snprintf(result_path, sizeof(result_path), "%s/%s",
@@ -99,14 +96,11 @@ static int light_activate(struct sensor_api_t *s, int enable)
 
         d->fd = fd;
         d->worker.resume(&d->worker);
-    }
-    else
-    {
-      //ALOGV("light_activate : disabled");
-      d->worker.suspend(&d->worker);
-      close(d->fd);
-      d->fd = -1;
-      d->sysfs.write_int(&d->sysfs, "als_on", 0);
+    } else {
+        d->worker.suspend(&d->worker);
+        close(d->fd);
+        d->fd = -1;
+        d->sysfs.write_int(&d->sysfs, "als_on", 0);
     }
 
     return 0;
@@ -116,7 +110,6 @@ static int light_set_delay(struct sensor_api_t *s, int64_t ns)
 {
     struct sensor_desc *d = container_of(s, struct sensor_desc, api);
 
-    //ALOGV("light_set_delay : %lld", (long long)ns);
     d->worker.set_delay(&d->worker, ns);
 
     return 0;
@@ -126,7 +119,6 @@ static void light_close(struct sensor_api_t *s)
 {
     struct sensor_desc *d = container_of(s, struct sensor_desc, api);
 
-    ALOGV("light_close");
     d->worker.destroy(&d->worker);
 }
 
