@@ -42,14 +42,14 @@ static void *light_poll(void *arg)
 
     memset(&data, 0, sizeof(data));
     pread(d->fd, buf, sizeof(buf), 0);
-    lux = atof(buf);
+    lux = atof(buf)*12;
 
     /*ignore null or negative values*/
     if (lux <= 0)
         lux = 1;
 
     ALOGV("light_poll : %d lux", lux);
-    data.light = lux * 1;
+    data.light = lux;
     data.version = light_sensor.sensor.version;
     data.sensor = light_sensor.sensor.handle;
     data.type = light_sensor.sensor.type;
@@ -63,7 +63,7 @@ static int light_init(struct sensor_api_t *s)
 {
     struct sensor_desc *d = container_of(s, struct sensor_desc, api);
 
-    ALOGV("light_init");
+    //ALOGV("light_init");
     sensors_worker_init(&d->worker, light_poll, &d->worker);
     sensors_sysfs_init(&d->sysfs, AS3677_DEV, SYSFS_TYPE_ABS_PATH);
 
@@ -80,7 +80,7 @@ static int light_activate(struct sensor_api_t *s, int enable)
 
     if (enable)
     {
-        ALOGV("light_activate : enable");
+        //ALOGV("light_activate : enable");
         d->sysfs.write_int(&d->sysfs, "als_on", 1);
 
         count = snprintf(result_path, sizeof(result_path), "%s/%s",
@@ -102,7 +102,7 @@ static int light_activate(struct sensor_api_t *s, int enable)
     }
     else
     {
-      ALOGV("light_activate : disabled");
+      //ALOGV("light_activate : disabled");
       d->worker.suspend(&d->worker);
       close(d->fd);
       d->fd = -1;
@@ -116,7 +116,7 @@ static int light_set_delay(struct sensor_api_t *s, int64_t ns)
 {
     struct sensor_desc *d = container_of(s, struct sensor_desc, api);
 
-    ALOGV("light_set_delay : %lld", (long long)ns);
+    //ALOGV("light_set_delay : %lld", (long long)ns);
     d->worker.set_delay(&d->worker, ns);
 
     return 0;
